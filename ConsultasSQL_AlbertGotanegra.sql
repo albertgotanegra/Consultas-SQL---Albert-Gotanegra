@@ -85,5 +85,219 @@ FROM actor a
 JOIN film_actor fa ON fa.actor_id = a.actor_id
 GROUP BY a.actor_id, a.first_name, a.last_name;
 
+SELECT f.title, a.first_name, a.last_name
+FROM film f
+LEFT JOIN film_actor fa ON fa.film_id = f.film_id
+LEFT JOIN actor a ON a.actor_id = fa.actor_id;
+
+SELECT a.first_name, a.last_name, f.title
+FROM actor a
+LEFT JOIN film_actor fa ON fa.actor_id = a.actor_id
+LEFT JOIN film f ON f.film_id = fa.film_id;
+
+SELECT f.title, r.rental_id, r.rental_date
+FROM film f
+FULL OUTER JOIN inventory i ON i.film_id = f.film_id
+FULL OUTER JOIN rental r ON r.inventory_id = i.inventory_id;
+
+SELECT c.customer_id, c.first_name, c.last_name, SUM(p.amount) AS total_gastado
+FROM customer c
+JOIN payment p ON p.customer_id = c.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+ORDER BY total_gastado DESC
+LIMIT 5;
+
+SELECT *
+FROM actor
+WHERE first_name = 'Johnny';
+
+SELECT first_name AS "Nombre", last_name AS "Apellido"
+FROM actor;
+
+SELECT MIN(actor_id) AS id_minimo, MAX(actor_id) AS id_maximo
+FROM actor;
+
+SELECT COUNT(*) AS total_actores
+FROM actor;
+
+SELECT *
+FROM actor
+ORDER BY last_name ASC;
+
+SELECT *
+FROM film
+ORDER BY film_id
+LIMIT 5;
+
+SELECT first_name, COUNT(*) AS cantidad
+FROM actor
+GROUP BY first_name
+ORDER BY cantidad DESC;
+
+SELECT first_name, COUNT(*) AS cantidad
+FROM actor
+GROUP BY first_name
+ORDER BY cantidad DESC
+LIMIT 1;
+
+SELECT r.rental_id, r.rental_date, c.first_name, c.last_name
+FROM rental r
+JOIN customer c ON c.customer_id = r.customer_id;
+
+SELECT c.customer_id, c.first_name, c.last_name, r.rental_id, r.rental_date
+FROM customer c
+LEFT JOIN rental r ON r.customer_id = c.customer_id;
+
+SELECT f.title, c.name
+FROM film f
+CROSS JOIN category c;
+-- Respuesta: No, no aporta valor real. Un CROSS JOIN combina cada fila
+-- de "film" con cada fila de "category" sin ninguna condición de
+-- relación entre ambas tablas (todas-con-todas), generando
+-- num_películas × num_categorías filas que no reflejan la categoría
+-- real de cada película. Para saber la categoría real de cada película
+-- hace falta un INNER JOIN pasando por la tabla intermedia
+-- film_category (como en el ejercicio 19 o 61), que sí respeta la
+-- relación real de los datos.
+
+FROM actor a
+JOIN film_actor fa ON fa.actor_id = a.actor_id
+JOIN film_category fc ON fc.film_id = fa.film_id
+JOIN category c ON c.category_id = fc.category_id
+WHERE c.name = 'Action';
+
+
+SELECT a.first_name, a.last_name
+FROM actor a
+LEFT JOIN film_actor fa ON fa.actor_id = a.actor_id
+WHERE fa.film_id IS NULL;
+
+SELECT a.first_name, a.last_name, COUNT(fa.film_id) AS num_peliculas
+FROM actor a
+JOIN film_actor fa ON fa.actor_id = a.actor_id
+GROUP BY a.actor_id, a.first_name, a.last_name;
+
+CREATE VIEW actor_num_peliculas AS
+SELECT a.actor_id, a.first_name, a.last_name, COUNT(fa.film_id) AS num_peliculas
+FROM actor a
+JOIN film_actor fa ON fa.actor_id = a.actor_id
+GROUP BY a.actor_id, a.first_name, a.last_name;
+
+SELECT customer_id, COUNT(*) AS total_alquileres
+FROM rental
+GROUP BY customer_id;
+
+SELECT SUM(f.length) AS duracion_total
+FROM film f
+JOIN film_category fc ON fc.film_id = f.film_id
+JOIN category c ON c.category_id = fc.category_id
+WHERE c.name = 'Action';
+
+CREATE TEMP TABLE cliente_rentas_temporal AS
+SELECT customer_id, COUNT(*) AS total_alquileres
+FROM rental
+GROUP BY customer_id;
+
+CREATE TEMP TABLE peliculas_alquiladas AS
+SELECT f.film_id, f.title, COUNT(r.rental_id) AS veces_alquilada
+FROM film f
+JOIN inventory i ON i.film_id = f.film_id
+JOIN rental r ON r.inventory_id = i.inventory_id
+GROUP BY f.film_id, f.title
+HAVING COUNT(r.rental_id) >= 10;
+
+SELECT f.title
+FROM film f
+JOIN inventory i ON i.film_id = f.film_id
+JOIN rental r ON r.inventory_id = i.inventory_id
+JOIN customer c ON c.customer_id = r.customer_id
+WHERE c.first_name = 'Tammy' AND c.last_name = 'Sanders'
+  AND r.return_date IS NULL
+ORDER BY f.title;
+
+SELECT DISTINCT a.first_name, a.last_name
+FROM actor a
+JOIN film_actor fa ON fa.actor_id = a.actor_id
+JOIN film_category fc ON fc.film_id = fa.film_id
+JOIN category c ON c.category_id = fc.category_id
+WHERE c.name = 'Sci-Fi'
+ORDER BY a.last_name;
+
+SELECT DISTINCT a.first_name, a.last_name
+FROM actor a
+JOIN film_actor fa ON fa.actor_id = a.actor_id
+JOIN film f ON f.film_id = fa.film_id
+JOIN inventory i ON i.film_id = f.film_id
+JOIN rental r ON r.inventory_id = i.inventory_id
+WHERE r.rental_date > (
+    SELECT MIN(r2.rental_date)
+    FROM rental r2
+    JOIN inventory i2 ON i2.inventory_id = r2.inventory_id
+    JOIN film f2 ON f2.film_id = i2.film_id
+    WHERE f2.title = 'Spartacus Cheaper'
+)
+ORDER BY a.last_name;
+
+SELECT a.first_name, a.last_name
+FROM actor a
+WHERE a.actor_id NOT IN (
+    SELECT fa.actor_id
+    FROM film_actor fa
+    JOIN film_category fc ON fc.film_id = fa.film_id
+    JOIN category c ON c.category_id = fc.category_id
+    WHERE c.name = 'Music');
+
+SELECT DISTINCT f.title
+FROM film f
+JOIN inventory i ON i.film_id = f.film_id
+JOIN rental r ON r.inventory_id = i.inventory_id
+WHERE r.return_date IS NOT NULL
+  AND (r.return_date - r.rental_date) > INTERVAL '8 days';
+
+SELECT f.title
+FROM film f
+JOIN film_category fc ON fc.film_id = f.film_id
+JOIN category c ON c.category_id = fc.category_id
+WHERE c.name = 'Animation';
+
+SELECT title
+FROM film
+WHERE length = (SELECT length FROM film WHERE title = 'Dancing Fever')
+  AND title <> 'Dancing Fever'
+ORDER BY title;
+
+SELECT c.first_name, c.last_name
+FROM customer c
+JOIN rental r ON r.customer_id = c.customer_id
+JOIN inventory i ON i.inventory_id = r.inventory_id
+GROUP BY c.customer_id, c.first_name, c.last_name
+HAVING COUNT(DISTINCT i.film_id) >= 7
+ORDER BY c.last_name;
+
+SELECT c.name, COUNT(r.rental_id) AS total_alquileres
+FROM category c
+JOIN film_category fc ON fc.category_id = c.category_id
+JOIN film f ON f.film_id = fc.film_id
+JOIN inventory i ON i.film_id = f.film_id
+JOIN rental r ON r.inventory_id = i.inventory_id
+GROUP BY c.name;
+
+SELECT c.name, COUNT(*) AS num_peliculas
+FROM category c
+JOIN film_category fc ON fc.category_id = c.category_id
+JOIN film f ON f.film_id = fc.film_id
+WHERE f.release_year = 2006
+GROUP BY c.name;
+
+SELECT s.first_name, s.last_name, st.store_id
+FROM staff s
+CROSS JOIN store st;
+
+SELECT c.customer_id, c.first_name, c.last_name, COUNT(r.rental_id) AS peliculas_alquiladas
+FROM customer c
+JOIN rental r ON r.customer_id = c.customer_id
+GROUP BY c.customer_id, c.first_name, c.last_name;
+
+
 
 
