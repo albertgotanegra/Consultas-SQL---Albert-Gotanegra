@@ -1,39 +1,62 @@
+-- 1. Crea el esquema de la BBDD.
+-- Esto ya está resuelto por el propio script que se nos dió: al ejecutarlo entero (CREATE TABLE + INSERT de cada tabla) es
+-- literalmente "crear el esquema".
+
+-- 2. Muestra los nombres de todas las películas con clasificación 'R'.
 select title from film where rating = 'R' limit 5;
 
+-- 3. Nombres de los actores con actor_id entre 30 y 40.
 select first_name, last_name from actor where actor_id between 30 and 40;  
 
+-- 4. Películas cuyo idioma coincide con el idioma original.
 select * from film where language_id = original_language_id;
 
+-- 5. Ordena las películas por duración de forma ascendente.
 select title, length from film order by length asc;
 
+-- 6. Nombre y apellido de actores con 'Allen' en el apellido.
 select first_name, last_name from actor where last_name like 'Allen';
 
+-- 7. Cantidad total de películas por clasificación.
 select rating, count(*) as total from film group by rating;
 
+-- 8. Título de películas 'PG-13' o con duración mayor a 3 horas.
 select title FROM film WHERE rating = 'PG-13' OR length > 180;
 
+-- 9. Variabilidad del coste de reemplazo de las películas.
 SELECT VARIANCE(replacement_cost) AS varianza_replacement_cost FROM film;
 
+-- 10. Mayor y menor duración de una película.
 SELECT MAX(length) AS duracion_maxima, MIN(length) AS duracion_minima FROM film;
 
+-- 11. Coste del antepenúltimo alquiler, ordenado por día.
 SELECT p.amount FROM rental r JOIN payment p ON p.rental_id = r.rental_id ORDER BY r.rental_date desc OFFSET 2 LIMIT 1;
 
+-- 12. Título de películas que no sean ni 'NC-17' ni 'G'.
 SELECT title FROM film WHERE rating NOT IN ('NC-17', 'G');
 
+-- 13. Promedio de duración por clasificación.
 SELECT rating, AVG(length) AS promedio_duracion FROM film GROUP BY rating;
 
+-- 14. Título de películas con duración mayor a 180 minutos.
 SELECT title FROM film WHERE length > 180;
 
+-- 15. Dinero total generado por la empresa.
 SELECT SUM(amount) AS total_generado FROM payment;
 
+-- 16. Los 10 clientes con mayor valor de id.
 SELECT * FROM customer ORDER BY customer_id desc LIMIT 10;
 
+-- 17. Nombre y apellido de actores en la película 'Egg Igby'.
 SELECT a.first_name, a.last_name FROM actor a JOIN film_actor fa ON fa.actor_id = a.actor_id JOIN film f ON f.film_id = fa.film_id WHERE f.title = 'Egg Igby';
 
+-- 18. Nombres de películas únicos.
 SELECT DISTINCT title FROM film;
 
+-- 19. Título de películas de comedia con duración > 180 min.
 SELECT f.title FROM film f JOIN film_category fc ON fc.film_id = f.film_id JOIN category c ON c.category_id = fc.category_id WHERE c.name = 'Comedy' AND f.length > 180;
 
+-- 20. Categorías con promedio de duración > 110 min.
 SELECT c.name, AVG(f.length) AS promedio_duracion
 FROM category c
 JOIN film_category fc ON fc.category_id = c.category_id
@@ -41,21 +64,24 @@ JOIN film f ON f.film_id = fc.film_id
 GROUP BY c.name
 HAVING AVG(f.length) > 110;
 
+-- 21. Media de duración del alquiler de las películas.
 SELECT AVG(rental_duration) AS media_duracion_alquiler FROM film;
 
-SELECT AVG(return_date - rental_date) AS media_duracion_real FROM rental WHERE return_date IS NOT NULL;
-
+-- 22. Columna con nombre y apellido de todos los actores/actrices.
 SELECT first_name || ' ' || last_name AS nombre_completo FROM actor;
 
+-- 23. Número de alquileres por día, ordenados descendente.
 SELECT rental_date::date AS dia, COUNT(*) AS num_alquileres
 FROM rental
 GROUP BY rental_date::date
 ORDER BY num_alquileres DESC;
 
+-- 24. Películas con duración superior al promedio.
 SELECT title, length
 FROM film
 WHERE length > (SELECT AVG(length) FROM film);
 
+-- 25. Número de alquileres registrados por mes.
 SELECT DATE_TRUNC('month', rental_date) AS mes, COUNT(*) AS num_alquileres
 FROM rental
 GROUP BY DATE_TRUNC('month', rental_date)
@@ -151,14 +177,9 @@ LEFT JOIN rental r ON r.customer_id = c.customer_id;
 SELECT f.title, c.name
 FROM film f
 CROSS JOIN category c;
--- Respuesta: No, no aporta valor real. Un CROSS JOIN combina cada fila
--- de "film" con cada fila de "category" sin ninguna condición de
--- relación entre ambas tablas (todas-con-todas), generando
--- num_películas × num_categorías filas que no reflejan la categoría
--- real de cada película. Para saber la categoría real de cada película
--- hace falta un INNER JOIN pasando por la tabla intermedia
--- film_category (como en el ejercicio 19 o 61), que sí respeta la
--- relación real de los datos.
+-- Respuesta: No, no aporta valor real. Un CROSS JOIN combina cada fila de "film" con cada fila de "category" sin ninguna condición de
+-- relación entre ambas tablas (todas-con-todas), generando num_películas × num_categorías filas que no reflejan la categoría real de cada película. Para saber la categoría real de cada película
+-- hace falta un INNER JOIN pasando por la tabla intermedia film_category (como en el ejercicio 19 o 61), que sí respeta la relación real de los datos.
 
 FROM actor a
 JOIN film_actor fa ON fa.actor_id = a.actor_id
